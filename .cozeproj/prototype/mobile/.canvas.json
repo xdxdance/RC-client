@@ -1,0 +1,44 @@
+{
+  "elements": [
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/article-list.html"
+      },
+      "title": "文章列表",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/add-article.html"
+      },
+      "title": "添加文章",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/article-detail.html"
+      },
+      "title": "文章详情",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/note-list.html"
+      },
+      "title": "笔记列表",
+      "size": "mobile"
+    },
+    {
+      "type": "html",
+      "options": {
+        "path": ".cozeproj/prototype/mobile/note-edit.html"
+      },
+      "title": "笔记编辑",
+      "size": "mobile"
+    }
+  ]
+}
