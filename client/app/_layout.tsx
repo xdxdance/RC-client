@@ -23,6 +23,9 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: "" }} />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="article-detail" />
+        <Stack.Screen name="note-edit" />
       </Stack>
       <Toast />
     </Provider>
