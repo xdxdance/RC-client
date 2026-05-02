@@ -1,4 +1,4 @@
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
+const BASE_URL = 'http://192.168.1.8:9091';
 
 interface ApiResponse<T> {
   success: boolean;
