@@ -158,6 +158,16 @@ export async function getNotes(noteType?: string): Promise<Note[]> {
   return response.json();
 }
 
+// 获取笔记详情
+export async function getNoteById(id: number): Promise<Note> {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}api/v1/notes/${id}`);
+  if (!response.ok) {
+    throw new Error(`获取笔记详情失败: ${response.status}`);
+  }
+  return response.json();
+}
+
 // 创建笔记
 export async function createNote(data: CreateNoteData): Promise<Note> {
   const baseUrl = await getApiBaseUrl();
