@@ -23,7 +23,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.xdxdance.readingcollector"
+      "package": "com.xdxdance.readingcollector",
+      "newArchEnabled": false
     },
     "web": {
       "bundler": "metro",
