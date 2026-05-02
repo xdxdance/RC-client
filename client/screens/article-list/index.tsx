@@ -91,10 +91,10 @@ export default function ArticleListScreen() {
             <FontAwesome5 name="clock" size={12} color="#71717A" solid />
             <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
           </View>
-          {item.note_count !== undefined && item.note_count > 0 && (
+          {item.notes_count !== undefined && item.notes_count > 0 && (
             <View style={styles.metaItem}>
               <FontAwesome5 name="edit" size={12} color="#71717A" solid />
-              <Text style={styles.metaText}>{item.note_count}条笔记</Text>
+              <Text style={styles.metaText}>{item.notes_count}条笔记</Text>
             </View>
           )}
         </View>
