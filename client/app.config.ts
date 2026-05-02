@@ -76,6 +76,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "eas": {
         "projectId": "5497eabe-6592-436e-a10e-b9a52da8612e"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5497eabe-6592-436e-a10e-b9a52da8612e",
+      "fallbackToCacheTimeout": 0
     }
   }
 }
