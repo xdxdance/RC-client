@@ -55,6 +55,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: '设置',
+          tabBarIcon: ({ color }) => (
+            <FontAwesome6 name="gear" size={20} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
