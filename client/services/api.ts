@@ -227,7 +227,7 @@ export const articleApi = {
   getById: getArticleById,
   create: createArticle,
   delete: deleteArticle,
-  fetchFromUrl: fetchArticleFromUrl,
+  fetchFromUrl: fetchArticle,
 };
 
 export const noteApi = {
