@@ -220,3 +220,25 @@ export async function createTag(name: string): Promise<Tag> {
   }
   return response.json();
 }
+
+// articleApi 对象（兼容调用方式）
+export const articleApi = {
+  getList: getArticles,
+  getById: getArticleById,
+  create: createArticle,
+  delete: deleteArticle,
+  fetchFromUrl: fetchArticleFromUrl,
+};
+
+export const noteApi = {
+  getList: getNotes,
+  getById: getNoteById,
+  create: createNote,
+  update: updateNote,
+  delete: deleteNote,
+};
+
+export const tagApi = {
+  getList: getTags,
+  create: createTag,
+};
