@@ -22,7 +22,20 @@ let supabaseClient: SupabaseClient | null = null;
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseClient) {
     const { url, anonKey } = getSupabaseCredentials();
-    supabaseClient = createClient(url, anonKey);
+    supabaseClient = createClient(url, anonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+      global: {
+        fetch: (url, options) => {
+          return fetch(url, {
+            ...options,
+            signal: options?.signal || AbortSignal.timeout(30000), // 30秒超时
+          });
+        },
+      },
+    });
   }
   return supabaseClient;
 }
