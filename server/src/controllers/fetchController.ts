@@ -1,72 +1,27 @@
-import { createArticle } from '../storage/database/shared/relations';
+import { Router } from 'express';
+import { createArticle, getArticles } from '../storage/database/shared/relations.js';
 
-interface FetchResult {
+const router = Router();
+
+interface ArticleData {
   title: string;
+  url: string;
   author?: string;
   source?: string;
   cover_image?: string;
-  content: string;
+  content?: string;
   summary?: string;
 }
 
-// 简单HTML解析器
-function extractContent(html: string): { title: string; content: string; author?: string; cover_image?: string } {
-  // 提取标题
-  let titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const title = titleMatch ? titleMatch[1].trim() : '无标题';
+async function fetchFromUrl(url: string): Promise<ArticleData> {
+  console.log(`[FetchController] Starting fetch for URL: ${url}`);
 
-  // 提取 meta description
-  let descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
-  if (!descMatch) {
-    descMatch = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
-  }
-  const description = descMatch ? descMatch[1].trim() : '';
-
-  // 提取 OG 图片
-  let imgMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-  if (!imgMatch) {
-    imgMatch = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-  }
-  const cover_image = imgMatch ? imgMatch[1] : undefined;
-
-  // 提取作者
-  let authorMatch = html.match(/<meta[^>]*name=["']author["'][^>]*content=["']([^"']+)["']/i);
-  const author = authorMatch ? authorMatch[1].trim() : undefined;
-
-  // 提取正文内容（移除script和style标签）
-  let content = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return {
-    title,
-    content: content.substring(0, 5000), // 限制长度
-    author,
-    cover_image
-  };
-}
-
-// 简单 fetch 实现（无需 SDK 配置）
-async function simpleFetch(url: string): Promise<FetchResult> {
-  console.log(`[FetchController] Simple fetch for: ${url}`);
-  
+  // 简单的 HTTP fetch 来获取页面内容
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Sec-Fetch-User': '?1',
-      'Cache-Control': 'max-age=0',
-      'Referer': 'https://www.google.com/',
     },
   });
 
@@ -75,62 +30,70 @@ async function simpleFetch(url: string): Promise<FetchResult> {
   }
 
   const html = await response.text();
-  const extracted = extractContent(html);
+  console.log(`[FetchController] Simple fetch for: ${url}`);
+
+  // 提取 title
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  let title = titleMatch ? titleMatch[1].trim() : '无标题';
+
+  // 尝试提取 meta description
+  const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+  const summary = descMatch ? descMatch[1].trim() : '';
+
+  // 提取正文内容 (简化版)
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  const content = bodyMatch ? bodyMatch[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+
+  // 提取图片
+  const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+  const cover_image = ogImageMatch ? ogImageMatch[1] : null;
+
+  console.log(`[FetchController] Fetch success, title: ${title}`);
 
   return {
-    title: extracted.title,
-    author: extracted.author,
-    source: new URL(url).hostname,
-    cover_image: extracted.cover_image,
-    content: extracted.content,
-    summary: extracted.content.substring(0, 200),
+    title,
+    url,
+    author: null,
+    source: new URL(url).hostname.replace('www.', ''),
+    cover_image,
+    content,
+    summary: summary || content.substring(0, 200),
   };
 }
 
-export async function fetchFromUrl(url: string): Promise<FetchResult> {
-  console.log(`[FetchController] Attempting to fetch: ${url}`);
-  
-  // 优先尝试简单实现
-  try {
-    return await simpleFetch(url);
-  } catch (error) {
-    console.error(`[FetchController] Simple fetch failed: ${error}`);
-    throw new Error('无法获取文章内容，请检查网址是否可访问');
-  }
-}
+router.post('/fetch', async (req, res) => {
+  const { url } = req.body;
 
-export async function fetchAndSaveArticle(url: string) {
-  console.log(`[FetchController] Starting fetch for URL: ${url}`);
-  
-  // 超时处理：10秒超时
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Fetch timeout (10s)')), 10000);
-  });
-  
-  const fetchPromise = fetchFromUrl(url);
-  
-  let articleData;
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
+  }
+
+  console.log(`[FetchController] Attempting to fetch: ${url}`);
+
   try {
-    articleData = await Promise.race([fetchPromise, timeoutPromise]);
+    const articleData = await fetchFromUrl(url);
+
+    console.log(`[FetchController] Saving to database...`);
+    const article = await createArticle({
+      title: articleData.title,
+      url,
+      author: articleData.author,
+      source: articleData.source,
+      cover_image: articleData.cover_image,
+      content: articleData.content,
+      summary: articleData.summary,
+    });
+
+    console.log(`[FetchController] Database insert result:`, JSON.stringify(article));
+    const articleId = article?.data?.id || article?.id;
+    console.log(`[FetchController] Article created with ID: ${articleId}`);
+
+    // 返回创建的文章
+    res.json(article?.data || article);
   } catch (error: any) {
     console.error(`[FetchController] Fetch failed: ${error.message}`);
-    throw new Error(`获取文章失败: ${error.message}`);
+    res.status(500).json({ error: `获取文章失败: ${error.message}` });
   }
-  
-  console.log(`[FetchController] Fetch success, title: ${articleData.title}`);
-  
-  console.log(`[FetchController] Saving to database...`);
-  const article = await createArticle({
-    title: articleData.title,
-    url,
-    author: articleData.author,
-    source: articleData.source,
-    cover_image: articleData.cover_image,
-    content: articleData.content,
-    summary: articleData.summary,
-  });
-  
-  console.log(`[FetchController] Database insert result:`, JSON.stringify(article));
-  console.log(`[FetchController] Article created with ID: ${article?.id || 'UNDEFINED'}`);
-  return article;
-}
+});
+
+export default router;
