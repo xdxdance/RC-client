@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -23,8 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.xdxdance.readingcollector",
-      "newArchEnabled": false
+      "package": `com.anonymous.x${projectId || '0'}`
     },
     "web": {
       "bundler": "metro",
@@ -50,37 +49,28 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-image-picker",
         {
-          "photosPermission": `允许ReadNote App访问您的相册，以便您上传或保存图片。`,
-          "cameraPermission": `允许ReadNote App使用您的相机，以便您直接拍摄照片上传。`,
-          "microphonePermission": `允许ReadNote App访问您的麦克风，以便您拍摄带有声音的视频。`
+          "photosPermission": `允许${appName}访问您的相册，以便您上传或保存图片。`,
+          "cameraPermission": `允许${appName}使用您的相机，以便您直接拍摄照片上传。`,
+          "microphonePermission": `允许${appName}访问您的麦克风，以便您拍摄带有声音的视频。`
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": `ReadNote App需要访问您的位置以提供周边服务及导航功能。`
+          "locationWhenInUsePermission": `${appName}需要访问您的位置以提供周边服务及导航功能。`
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": `ReadNote App需要访问相机以拍摄照片和视频。`,
-          "microphonePermission": `ReadNote App需要访问麦克风以录制视频声音。`,
+          "cameraPermission": `${appName}需要访问相机以拍摄照片和视频。`,
+          "microphonePermission": `${appName}需要访问麦克风以录制视频声音。`,
           "recordAudioAndroid": true
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5497eabe-6592-436e-a10e-b9a52da8612e"
-      }
-    },
-    "updates": {
-      "url": "https://u.expo.dev/5497eabe-6592-436e-a10e-b9a52da8612e",
-      "fallbackToCacheTimeout": 0
     }
   }
 }
