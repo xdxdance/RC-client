@@ -119,6 +119,7 @@ export async function fetchAndSaveArticle(url: string) {
   
   console.log(`[FetchController] Fetch success, title: ${articleData.title}`);
   
+  console.log(`[FetchController] Saving to database...`);
   const article = await createArticle({
     title: articleData.title,
     url,
@@ -129,6 +130,7 @@ export async function fetchAndSaveArticle(url: string) {
     summary: articleData.summary,
   });
   
-  console.log(`[FetchController] Article created with ID: ${article.id}`);
+  console.log(`[FetchController] Database insert result:`, JSON.stringify(article));
+  console.log(`[FetchController] Article created with ID: ${article?.id || 'UNDEFINED'}`);
   return article;
 }
