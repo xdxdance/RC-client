@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { clearApiCache } from '@/services/api';
+import { clearApiCache, getApiBaseUrl } from '@/services/api';
 
 const API_STORAGE_KEY = '@app_config';
 
 export default function SettingsScreen() {
   const [apiUrl, setApiUrl] = useState('http://localhost:9091');
   const [saved, setSaved] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState('');
 
   useEffect(() => {
     // Load API URL on mount
@@ -25,6 +26,11 @@ export default function SettingsScreen() {
       }
     }).catch((error) => {
       console.error('Failed to load API URL:', error);
+    });
+    
+    // 显示实际读取到的 API 地址
+    getApiBaseUrl().then((url) => {
+      setCurrentUrl(url);
     });
   }, []);
 
@@ -76,7 +82,7 @@ export default function SettingsScreen() {
               后端 API 地址
             </Text>
             <TextInput
-              className="text-gray-700 dark:text-gray-200 text-base mb-3"
+              className="text-gray-700 dark:text-gray-200 text-base mb-2"
               placeholder="http://localhost:9091"
               placeholderTextColor="#9CA3AF"
               value={apiUrl}
@@ -87,6 +93,10 @@ export default function SettingsScreen() {
               autoCapitalize="none"
               autoCorrect={false}
             />
+            {/* 显示当前实际使用的 API 地址 */}
+            <Text className="text-xs text-gray-400 mb-3">
+              当前使用: {currentUrl || '读取中...'}
+            </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
                 className="flex-1 bg-blue-500 rounded-lg py-3 items-center"
