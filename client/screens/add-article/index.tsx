@@ -7,6 +7,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 export default function AddArticleScreen() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
   const router = useSafeRouter();
 
   const handleFetch = async () => {
@@ -16,14 +17,28 @@ export default function AddArticleScreen() {
     }
 
     setLoading(true);
+    setLoadingText('正在获取...');
+
     try {
+      setLoadingText('正在获取文章内容...');
       const article = await fetchFromUrl(url.trim());
-      router.replace('/article-detail', { id: article.id });
-    } catch (error) {
+      
+      if (article && article.id) {
+        setLoadingText('获取成功！');
+        setTimeout(() => {
+          router.replace('/article-detail', { id: article.id });
+        }, 500);
+      } else {
+        Alert.alert('提示', '文章获取成功，但未返回有效ID，请刷新列表查看');
+        setLoading(false);
+        setLoadingText('');
+      }
+    } catch (error: any) {
       console.error('Failed to fetch article:', error);
-      Alert.alert('错误', '无法获取文章，请检查链接是否正确');
-    } finally {
+      const errorMsg = error?.message || '无法获取文章，请检查链接是否正确';
+      Alert.alert('获取失败', errorMsg);
       setLoading(false);
+      setLoadingText('');
     }
   };
 
@@ -31,7 +46,7 @@ export default function AddArticleScreen() {
     <Screen>
       <View className="flex-1 bg-gray-50 dark:bg-gray-900">
         <View className="bg-white dark:bg-gray-800 px-4 py-4 border-b border-gray-200 dark:border-gray-700 flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.back()} disabled={loading}>
             <Text className="text-blue-500">取消</Text>
           </TouchableOpacity>
           <Text className="flex-1 text-lg font-semibold text-gray-900 dark:text-white text-center">
@@ -54,6 +69,7 @@ export default function AddArticleScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
+              editable={!loading}
             />
           </View>
 
@@ -81,16 +97,25 @@ export default function AddArticleScreen() {
           </View>
 
           <TouchableOpacity
-            className="bg-blue-500 rounded-xl py-4 items-center"
+            className={`rounded-xl py-4 items-center ${loading ? 'bg-gray-400' : 'bg-blue-500'}`}
             onPress={handleFetch}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color="white" />
+              <View className="items-center">
+                <ActivityIndicator color="white" />
+                <Text className="text-white text-sm mt-2">{loadingText}</Text>
+              </View>
             ) : (
               <Text className="text-white font-semibold text-lg">获取文章</Text>
             )}
           </TouchableOpacity>
+
+          {loading && (
+            <Text className="text-gray-500 text-sm text-center mt-4">
+              如果长时间无响应，请检查网络或尝试其他链接
+            </Text>
+          )}
         </View>
       </View>
     </Screen>
