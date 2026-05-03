@@ -7,17 +7,22 @@ export async function getApiBaseUrl(): Promise<string> {
   // 每次都重新读取，不使用缓存
   try {
     const config = await AsyncStorage.getItem(API_STORAGE_KEY);
+    console.log('[API] Loaded config from AsyncStorage:', config);
     if (config) {
       const parsed = JSON.parse(config);
+      console.log('[API] Parsed config:', parsed);
       if (parsed.backendUrl) {
+        console.log('[API] Using backendUrl:', parsed.backendUrl);
         return parsed.backendUrl;
       }
     }
   } catch (e) {
-    console.error('Failed to load API config:', e);
+    console.error('[API] Failed to load API config:', e);
   }
   
-  return process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
+  const fallback = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
+  console.log('[API] Using fallback URL:', fallback);
+  return fallback;
 }
 
 export function clearApiCache(): void {
@@ -58,7 +63,9 @@ export interface Tag {
 // Articles API
 export async function fetchArticles(): Promise<Article[]> {
   const baseUrl = await getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/v1/articles`);
+  const url = `${baseUrl}/api/v1/articles`;
+  console.log('[API] fetchArticles URL:', url);
+  const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch articles');
   return response.json();
 }
