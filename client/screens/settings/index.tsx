@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Screen } from '@/components/Screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearApiCache } from '@/services/api';
 
-const API_URL_KEY = '@api_base_url';
+const API_STORAGE_KEY = '@app_config';
 
 export default function SettingsScreen() {
   const [apiUrl, setApiUrl] = useState('http://localhost:9091');
@@ -11,9 +12,16 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     // Load API URL on mount
-    AsyncStorage.getItem(API_URL_KEY).then((url) => {
-      if (url) {
-        setApiUrl(url);
+    AsyncStorage.getItem(API_STORAGE_KEY).then((config) => {
+      if (config) {
+        try {
+          const parsed = JSON.parse(config);
+          if (parsed.backendUrl) {
+            setApiUrl(parsed.backendUrl);
+          }
+        } catch (e) {
+          // ignore
+        }
       }
     }).catch((error) => {
       console.error('Failed to load API URL:', error);
@@ -27,7 +35,10 @@ export default function SettingsScreen() {
         Alert.alert('提示', '请输入API地址');
         return;
       }
-      await AsyncStorage.setItem(API_URL_KEY, trimmedUrl);
+      // 保存到 @app_config 格式
+      await AsyncStorage.setItem(API_STORAGE_KEY, JSON.stringify({ backendUrl: trimmedUrl }));
+      // 清除 API 缓存，强制重新加载
+      clearApiCache();
       setSaved(true);
       Alert.alert('成功', 'API地址已保存');
       setTimeout(() => setSaved(false), 2000);

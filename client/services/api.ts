@@ -1,4 +1,31 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_STORAGE_KEY = '@app_config';
+let cachedBaseUrl: string | null = null;
+
+export async function getApiBaseUrl(): Promise<string> {
+  if (cachedBaseUrl) return cachedBaseUrl;
+  
+  try {
+    const config = await AsyncStorage.getItem(API_STORAGE_KEY);
+    if (config) {
+      const parsed = JSON.parse(config);
+      if (parsed.backendUrl) {
+        cachedBaseUrl = parsed.backendUrl;
+        return cachedBaseUrl;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load API config:', e);
+  }
+  
+  cachedBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
+  return cachedBaseUrl;
+}
+
+export function clearApiCache(): void {
+  cachedBaseUrl = null;
+}
 
 export interface Article {
   id: number;
@@ -33,19 +60,22 @@ export interface Tag {
 
 // Articles API
 export async function fetchArticles(): Promise<Article[]> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles`);
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles`);
   if (!response.ok) throw new Error('Failed to fetch articles');
   return response.json();
 }
 
 export async function fetchArticle(id: number): Promise<Article> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles/${id}`);
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/${id}`);
   if (!response.ok) throw new Error('Failed to fetch article');
   return response.json();
 }
 
 export async function fetchFromUrl(url: string): Promise<Article> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles/fetch`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/fetch`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
@@ -55,7 +85,8 @@ export async function fetchFromUrl(url: string): Promise<Article> {
 }
 
 export async function createArticle(article: Partial<Article>): Promise<Article> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(article),
@@ -65,7 +96,8 @@ export async function createArticle(article: Partial<Article>): Promise<Article>
 }
 
 export async function updateArticle(id: number, article: Partial<Article>): Promise<Article> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles/${id}`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(article),
@@ -75,7 +107,8 @@ export async function updateArticle(id: number, article: Partial<Article>): Prom
 }
 
 export async function deleteArticle(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/articles/${id}`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/${id}`, {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Failed to delete article');
@@ -83,20 +116,23 @@ export async function deleteArticle(id: number): Promise<void> {
 
 // Notes API
 export async function fetchNotes(articleId?: number): Promise<Note[]> {
+  const baseUrl = await getApiBaseUrl();
   const params = articleId ? `?article_id=${articleId}` : '';
-  const response = await fetch(`${API_BASE_URL}/api/v1/notes${params}`);
+  const response = await fetch(`${baseUrl}/api/v1/notes${params}`);
   if (!response.ok) throw new Error('Failed to fetch notes');
   return response.json();
 }
 
 export async function fetchNote(id: number): Promise<Note> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/notes/${id}`);
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes/${id}`);
   if (!response.ok) throw new Error('Failed to fetch note');
   return response.json();
 }
 
 export async function createNote(note: Partial<Note>): Promise<Note> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/notes`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(note),
@@ -106,7 +142,8 @@ export async function createNote(note: Partial<Note>): Promise<Note> {
 }
 
 export async function updateNote(id: number, note: Partial<Note>): Promise<Note> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/notes/${id}`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(note),
@@ -116,7 +153,8 @@ export async function updateNote(id: number, note: Partial<Note>): Promise<Note>
 }
 
 export async function deleteNote(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/notes/${id}`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes/${id}`, {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Failed to delete note');
@@ -124,13 +162,15 @@ export async function deleteNote(id: number): Promise<void> {
 
 // Tags API
 export async function fetchTags(): Promise<Tag[]> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/tags`);
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/tags`);
   if (!response.ok) throw new Error('Failed to fetch tags');
   return response.json();
 }
 
 export async function createTag(tag: Partial<Tag>): Promise<Tag> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/tags`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/tags`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(tag),
@@ -140,8 +180,43 @@ export async function createTag(tag: Partial<Tag>): Promise<Tag> {
 }
 
 export async function deleteTag(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/tags/${id}`, {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/tags/${id}`, {
     method: 'DELETE',
   });
   if (!response.ok) throw new Error('Failed to delete tag');
+}
+
+// Article-Tag relations
+export async function addTagToArticle(articleId: number, tagId: number): Promise<void> {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/${articleId}/tags/${tagId}`, {
+    method: 'POST',
+  });
+  if (!response.ok) throw new Error('Failed to add tag to article');
+}
+
+export async function removeTagFromArticle(articleId: number, tagId: number): Promise<void> {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/articles/${articleId}/tags/${tagId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to remove tag from article');
+}
+
+// Note-Tag relations
+export async function addTagToNote(noteId: number, tagId: number): Promise<void> {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes/${noteId}/tags/${tagId}`, {
+    method: 'POST',
+  });
+  if (!response.ok) throw new Error('Failed to add tag to note');
+}
+
+export async function removeTagFromNote(noteId: number, tagId: number): Promise<void> {
+  const baseUrl = await getApiBaseUrl();
+  const response = await fetch(`${baseUrl}/api/v1/notes/${noteId}/tags/${tagId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to remove tag from note');
 }
