@@ -43,6 +43,10 @@ export default function SettingsScreen() {
       }
       // 保存到 @app_config 格式
       await AsyncStorage.setItem(API_STORAGE_KEY, JSON.stringify({ backendUrl: trimmedUrl }));
+      console.log('[Settings] Saved to AsyncStorage:', trimmedUrl);
+      // 保存后立即读取确认
+      const saved = await AsyncStorage.getItem(API_STORAGE_KEY);
+      console.log('[Settings] Verification read:', saved);
       // 清除 API 缓存，强制重新加载
       clearApiCache();
       setSaved(true);
