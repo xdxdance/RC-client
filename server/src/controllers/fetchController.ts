@@ -21,7 +21,24 @@ export async function fetchFromUrl(url: string): Promise<FetchResult> {
 }
 
 export async function fetchAndSaveArticle(url: string) {
-  const articleData = await fetchFromUrl(url);
+  console.log(`[FetchController] Starting fetch for URL: ${url}`);
+  
+  // 超时处理：10秒超时
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Fetch timeout (10s)')), 10000);
+  });
+  
+  const fetchPromise = fetchFromUrl(url);
+  
+  let articleData;
+  try {
+    articleData = await Promise.race([fetchPromise, timeoutPromise]);
+  } catch (error: any) {
+    console.error(`[FetchController] Fetch failed: ${error.message}`);
+    throw new Error(`获取文章失败: ${error.message}`);
+  }
+  
+  console.log(`[FetchController] Fetch success, title: ${articleData.title}`);
   
   const article = await createArticle({
     title: articleData.title,
@@ -33,5 +50,6 @@ export async function fetchAndSaveArticle(url: string) {
     summary: articleData.summary,
   });
   
+  console.log(`[FetchController] Article created with ID: ${article.id}`);
   return article;
 }
