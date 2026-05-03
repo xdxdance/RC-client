@@ -1,5 +1,4 @@
-import { getReportBuffer } from 'coze-coding-dev-sdk';
-import { createArticle, updateArticle, getArticleById } from '../storage/database/shared/relations';
+import { createArticle } from '../storage/database/shared/relations';
 
 interface FetchResult {
   title: string;
@@ -10,13 +9,83 @@ interface FetchResult {
   summary?: string;
 }
 
+// 简单HTML解析器
+function extractContent(html: string): { title: string; content: string; author?: string; cover_image?: string } {
+  // 提取标题
+  let titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].trim() : '无标题';
+
+  // 提取 meta description
+  let descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+  if (!descMatch) {
+    descMatch = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
+  }
+  const description = descMatch ? descMatch[1].trim() : '';
+
+  // 提取 OG 图片
+  let imgMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+  if (!imgMatch) {
+    imgMatch = html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+  }
+  const cover_image = imgMatch ? imgMatch[1] : undefined;
+
+  // 提取作者
+  let authorMatch = html.match(/<meta[^>]*name=["']author["'][^>]*content=["']([^"']+)["']/i);
+  const author = authorMatch ? authorMatch[1].trim() : undefined;
+
+  // 提取正文内容（移除script和style标签）
+  let content = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return {
+    title,
+    content: content.substring(0, 5000), // 限制长度
+    author,
+    cover_image
+  };
+}
+
+// 简单 fetch 实现（无需 SDK 配置）
+async function simpleFetch(url: string): Promise<FetchResult> {
+  console.log(`[FetchController] Simple fetch for: ${url}`);
+  
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; ReadingCollector/1.0)',
+      'Accept': 'text/html,application/xhtml+xml',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status}`);
+  }
+
+  const html = await response.text();
+  const extracted = extractContent(html);
+
+  return {
+    title: extracted.title,
+    author: extracted.author,
+    source: new URL(url).hostname,
+    cover_image: extracted.cover_image,
+    content: extracted.content,
+    summary: extracted.content.substring(0, 200),
+  };
+}
+
 export async function fetchFromUrl(url: string): Promise<FetchResult> {
+  console.log(`[FetchController] Attempting to fetch: ${url}`);
+  
+  // 优先尝试简单实现
   try {
-    const buffer = await getReportBuffer(url);
-    return buffer as unknown as FetchResult;
+    return await simpleFetch(url);
   } catch (error) {
-    console.error('Error fetching URL:', error);
-    throw new Error('Failed to fetch article from URL');
+    console.error(`[FetchController] Simple fetch failed: ${error}`);
+    throw new Error('无法获取文章内容，请检查网址是否可访问');
   }
 }
 
