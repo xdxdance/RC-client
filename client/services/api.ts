@@ -4,23 +4,20 @@ const API_STORAGE_KEY = '@app_config';
 let cachedBaseUrl: string | null = null;
 
 export async function getApiBaseUrl(): Promise<string> {
-  if (cachedBaseUrl) return cachedBaseUrl;
-  
+  // 每次都重新读取，不使用缓存
   try {
     const config = await AsyncStorage.getItem(API_STORAGE_KEY);
     if (config) {
       const parsed = JSON.parse(config);
       if (parsed.backendUrl) {
-        cachedBaseUrl = parsed.backendUrl;
-        return cachedBaseUrl;
+        return parsed.backendUrl;
       }
     }
   } catch (e) {
     console.error('Failed to load API config:', e);
   }
   
-  cachedBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
-  return cachedBaseUrl;
+  return process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://localhost:9091';
 }
 
 export function clearApiCache(): void {
