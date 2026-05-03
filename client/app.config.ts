@@ -1,8 +1,8 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
-const appName = process.env.COZE_PROJECT_NAME || process.env.EXPO_PUBLIC_COZE_PROJECT_NAME || '应用';
+const appName = process.env.COZE_PROJECT_NAME || process.env.EXPO_PUBLIC_COZE_PROJECT_NAME || '拾光收藏';
 const projectId = process.env.COZE_PROJECT_ID || process.env.EXPO_PUBLIC_COZE_PROJECT_ID;
-const slugAppName = projectId ? `app${projectId}` : 'myapp';
+const slugAppName = projectId ? `app${projectId}` : 'shiguang';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   return {
@@ -12,9 +12,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "shiguang",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": `com.anonymous.x${projectId || '0'}`
+      "package": "com.shiguang.collector"
     },
     "web": {
       "bundler": "metro",
@@ -31,12 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      process.env.EXPO_PUBLIC_BACKEND_BASE_URL ? [
-        "expo-router",
-        {
-          "origin": process.env.EXPO_PUBLIC_BACKEND_BASE_URL
-        }
-      ] : 'expo-router',
+      'expo-router',
       [
         "expo-splash-screen",
         {
@@ -49,22 +44,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-image-picker",
         {
-          "photosPermission": `允许${appName}访问您的相册，以便您上传或保存图片。`,
-          "cameraPermission": `允许${appName}使用您的相机，以便您直接拍摄照片上传。`,
-          "microphonePermission": `允许${appName}访问您的麦克风，以便您拍摄带有声音的视频。`
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": `${appName}需要访问您的位置以提供周边服务及导航功能。`
+          "photosPermission": "允许拾光收藏访问您的相册",
+          "cameraPermission": "允许拾光收藏使用您的相机",
+          "microphonePermission": "允许拾光收藏访问您的麦克风"
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": `${appName}需要访问相机以拍摄照片和视频。`,
-          "microphonePermission": `${appName}需要访问麦克风以录制视频声音。`,
+          "cameraPermission": "允许拾光收藏访问相机",
+          "microphonePermission": "允许拾光收藏访问麦克风",
           "recordAudioAndroid": true
         }
       ]
